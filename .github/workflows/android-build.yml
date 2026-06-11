@@ -40,18 +40,18 @@ jobs:
           npx @capacitor/cli add android || true
           npx @capacitor/cli sync android
 
-      # 1. خطوة جديدة: توليد أيقونات التطبيق تلقائياً من المجلد assets/icon.png لـ Android
+      # توليد أيقونات التطبيق تلقائياً من المجلد assets/icon.png
       - name: Generate App Icons from Assets
         run: |
           npm install @capacitor/assets
           npx @capacitor/assets generate --android
 
-      # خطوة الحل الجديدة: رفع الحد الأدنى للمنصة إلى 24 لتتوافق مع مكتبة الكاميرا
+      # رفع الحد الأدنى للمنصة إلى 24 لتتوافق مع مكتبة الكاميرا
       - name: Update minSdkVersion to 24
         run: |
           sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle || true
 
-      # خطوة الحل السابقة: إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
+      # إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
       - name: Force Compatible AndroidX Core Version
         run: |
           echo "" >> android/app/build.gradle
@@ -62,17 +62,24 @@ jobs:
           echo "    }" >> android/app/build.gradle
           echo "}" >> android/app/build.gradle
 
-      # 2. خطوة معدلة: بناء نسختي الـ Debug والـ Release معاً
+      # بناء نسختي الـ Debug والـ Release
       - name: Build Android APK (Debug & Release)
         run: |
           cd android
           ./gradlew assembleDebug
           ./gradlew assembleRelease
 
-      # 3. خطوة معدلة: رفع جميع ملفات الـ APK الناتجة (سواء ديباغ أو ريليز)
+      # خطوة الحل الذكي: تجميع الـ APKs في مجلد واحد نظيف وتسميتها بوضوح
+      - name: Prepare APKs for Upload
+        run: |
+          mkdir -p finished-apks
+          cp android/app/build/outputs/apk/debug/app-debug.apk finished-apks/mywardrobe-debug.apk
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk finished-apks/mywardrobe-release.apk
+
+      # رفع المجلد النظيف الذي يحتوي على التطبيقات مباشرة
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: mywardrobe-apks
-          path: android/app/build/outputs/apk/**/*.apk
+          path: finished-apks/
           retention-days: 30
