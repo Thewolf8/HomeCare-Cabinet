@@ -69,17 +69,25 @@ jobs:
           ./gradlew assembleDebug
           ./gradlew assembleRelease
 
-      # خطوة الحل الذكي: تجميع الـ APKs في مجلد واحد نظيف وتسميتها بوضوح
-      - name: Prepare APKs for Upload
+      # تغيير أسماء الملفات ونقلها لمكان مباشر ومكشوف
+      - name: Rename and Prepare Files
         run: |
-          mkdir -p finished-apks
-          cp android/app/build/outputs/apk/debug/app-debug.apk finished-apks/mywardrobe-debug.apk
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk finished-apks/mywardrobe-release.apk
+          mkdir -p output-files
+          cp android/app/build/outputs/apk/debug/app-debug.apk output-files/mywardrobe-debug.apk
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk output-files/mywardrobe-release.apk
 
-      # رفع المجلد النظيف الذي يحتوي على التطبيقات مباشرة
-      - name: Upload APK artifacts
+      # رفع نسخة الـ Debug بشكل منفصل (ستجد ملف APK مباشر بداخلها)
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: mywardrobe-apks
-          path: finished-apks/
+          name: mywardrobe-DEBUG-app
+          path: output-files/mywardrobe-debug.apk
+          retention-days: 30
+
+      # رفع نسخة الـ Release بشكل منفصل (ستجد ملف APK مباشر بداخلها)
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mywardrobe-RELEASE-app
+          path: output-files/mywardrobe-release.apk
           retention-days: 30
