@@ -34,10 +34,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # تم التعديل هنا: تثبيت الحزمة أولاً، ثم استخدام @capacitor/cli للإنشاء والمزامنة
       - name: Install Capacitor Android platform
         run: |
-          npx cap add android || true
-          npx cap sync android
+          npm install @capacitor/android
+          npx @capacitor/cli add android || true
+          npx @capacitor/cli sync android
 
       - name: Build Android APK
         run: |
