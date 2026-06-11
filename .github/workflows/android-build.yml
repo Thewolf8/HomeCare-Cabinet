@@ -40,6 +40,12 @@ jobs:
           npx @capacitor/cli add android || true
           npx @capacitor/cli sync android
 
+      # 1. خطوة جديدة: توليد أيقونات التطبيق تلقائياً من المجلد assets/icon.png لـ Android
+      - name: Generate App Icons from Assets
+        run: |
+          npm install @capacitor/assets
+          npx @capacitor/assets generate --android
+
       # خطوة الحل الجديدة: رفع الحد الأدنى للمنصة إلى 24 لتتوافق مع مكتبة الكاميرا
       - name: Update minSdkVersion to 24
         run: |
@@ -56,14 +62,17 @@ jobs:
           echo "    }" >> android/app/build.gradle
           echo "}" >> android/app/build.gradle
 
-      - name: Build Android APK
+      # 2. خطوة معدلة: بناء نسختي الـ Debug والـ Release معاً
+      - name: Build Android APK (Debug & Release)
         run: |
           cd android
           ./gradlew assembleDebug
+          ./gradlew assembleRelease
 
-      - name: Upload APK artifact
+      # 3. خطوة معدلة: رفع جميع ملفات الـ APK الناتجة (سواء ديباغ أو ريليز)
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mywardrobe-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: mywardrobe-apks
+          path: android/app/build/outputs/apk/**/*.apk
           retention-days: 30
