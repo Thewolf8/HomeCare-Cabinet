@@ -40,7 +40,12 @@ jobs:
           npx @capacitor/cli add android || true
           npx @capacitor/cli sync android
 
-      # خطوة الحل: إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
+      # خطوة الحل الجديدة: رفع الحد الأدنى للمنصة إلى 24 لتتوافق مع مكتبة الكاميرا
+      - name: Update minSdkVersion to 24
+        run: |
+          sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle || true
+
+      # خطوة الحل السابقة: إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
       - name: Force Compatible AndroidX Core Version
         run: |
           echo "" >> android/app/build.gradle
