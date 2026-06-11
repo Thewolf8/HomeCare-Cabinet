@@ -34,12 +34,22 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # تم التعديل هنا: تثبيت الحزمة أولاً، ثم استخدام @capacitor/cli للإنشاء والمزامنة
       - name: Install Capacitor Android platform
         run: |
           npm install @capacitor/android
           npx @capacitor/cli add android || true
           npx @capacitor/cli sync android
+
+      # خطوة الحل: إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
+      - name: Force Compatible AndroidX Core Version
+        run: |
+          echo "" >> android/app/build.gradle
+          echo "configurations.all {" >> android/app/build.gradle
+          echo "    resolutionStrategy {" >> android/app/build.gradle
+          echo "        force 'androidx.core:core:1.15.0'" >> android/app/build.gradle
+          echo "        force 'androidx.core:core-ktx:1.15.0'" >> android/app/build.gradle
+          echo "    }" >> android/app/build.gradle
+          echo "}" >> android/app/build.gradle
 
       - name: Build Android APK
         run: |
