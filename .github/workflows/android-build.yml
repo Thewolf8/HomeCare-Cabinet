@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,8 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -28,8 +29,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: temurin
+          java-version: "21"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -37,21 +38,22 @@ jobs:
       - name: Install Capacitor Android platform
         run: |
           npm install @capacitor/android
-          npx @capacitor/cli add android || true
-          npx @capacitor/cli sync android
+          npx cap add android || true
+          npx cap sync android
 
-      # توليد أيقونات التطبيق تلقائياً من المجلد assets/icon.png
-      - name: Generate App Icons from Assets
+      # توليد الأيقونات من assets/icon.png
+      - name: Generate Android Icons
         run: |
-          npm install @capacitor/assets
-          npx @capacitor/assets generate --android
+          npm install -D @capacitor/assets
+          npx capacitor-assets generate
 
-      # رفع الحد الأدنى للمنصة إلى 24 لتتوافق مع مكتبة الكاميرا
+      - name: Sync Capacitor
+        run: npx cap sync android
+
       - name: Update minSdkVersion to 24
         run: |
           sed -i 's/minSdkVersion = 23/minSdkVersion = 24/g' android/variables.gradle || true
 
-      # إجبار محرك جيردل على استخدام إصدار متوافق مع API 35 لمنع تضارب androidx
       - name: Force Compatible AndroidX Core Version
         run: |
           echo "" >> android/app/build.gradle
@@ -62,32 +64,26 @@ jobs:
           echo "    }" >> android/app/build.gradle
           echo "}" >> android/app/build.gradle
 
-      # بناء نسختي الـ Debug والـ Release
-      - name: Build Android APK (Debug & Release)
+      # Debug APK
+      - name: Build Debug APK
         run: |
           cd android
           ./gradlew assembleDebug
+
+      # Release APK
+      - name: Build Release APK
+        run: |
+          cd android
           ./gradlew assembleRelease
 
-      # تغيير أسماء الملفات ونقلها لمكان مباشر ومكشوف
-      - name: Rename and Prepare Files
-        run: |
-          mkdir -p output-files
-          cp android/app/build/outputs/apk/debug/app-debug.apk output-files/mywardrobe-debug.apk
-          cp android/app/build/outputs/apk/release/app-release-unsigned.apk output-files/mywardrobe-release.apk
-
-      # رفع نسخة الـ Debug بشكل منفصل (ستجد ملف APK مباشر بداخلها)
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: mywardrobe-DEBUG-app
-          path: output-files/mywardrobe-debug.apk
-          retention-days: 30
+          name: debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # رفع نسخة الـ Release بشكل منفصل (ستجد ملف APK مباشر بداخلها)
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: mywardrobe-RELEASE-app
-          path: output-files/mywardrobe-release.apk
-          retention-days: 30
+          name: release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
